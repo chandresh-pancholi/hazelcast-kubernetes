@@ -26,7 +26,7 @@ public class HazelcastContext {
 
     public Config hazelcastConfig() {
         Config config =  new Config();
-        config.setInstanceName("landlord");
+        config.setInstanceName("hazelcast-kubernetes");
 
         config.getNetworkConfig().setPort(5701);
         config.getNetworkConfig().setPortAutoIncrement(true);
