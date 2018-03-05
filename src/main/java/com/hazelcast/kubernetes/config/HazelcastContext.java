@@ -1,9 +1,6 @@
 package com.hazelcast.kubernetes.config;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.DiscoveryConfig;
-import com.hazelcast.config.DiscoveryStrategyConfig;
-import com.hazelcast.config.GroupConfig;
+import com.hazelcast.config.*;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import lombok.extern.slf4j.Slf4j;
@@ -28,46 +25,37 @@ public class HazelcastContext {
     }
 
     public Config hazelcastConfig() {
-        Config config = new Config();
-
-        config.setInstanceName("hazelcast-kubernetes");
-
-        GroupConfig groupConfig = config.getGroupConfig();
-        groupConfig.setName("dev");
-        groupConfig.setPassword("dev-pass");
-        config.setGroupConfig(groupConfig);
+        Config config =  new Config();
+        config.setInstanceName("landlord");
 
         config.getNetworkConfig().setPort(5701);
         config.getNetworkConfig().setPortAutoIncrement(true);
 
-        //Only important to prior version of  hazelcast 3.8
-//        config.setProperty("hazelcast.discovery.enabled", "true");
-
-        hazelcastNetworkingConfig(config);
-
-        return config;
-    }
-
-    public void hazelcastNetworkingConfig(Config config) {
+        config.setProperty("hazelcast.discovery.enabled", "true");
         config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(false);
 
         config.getNetworkConfig().getJoin().setDiscoveryConfig(hazelcastDiscoveryStrategy(config));
+        config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
+
+        return config;
     }
 
-    public DiscoveryConfig hazelcastDiscoveryStrategy(Config config) {
-        DiscoveryConfig discoveryConfig = config.getNetworkConfig().getJoin().getDiscoveryConfig();
 
+
+    public DiscoveryConfig hazelcastDiscoveryStrategy(Config config) {
+        JoinConfig join = config.getNetworkConfig().getJoin();
+        join.getMulticastConfig().setEnabled(false);
+        join.getTcpIpConfig().setEnabled(false);
+
+        DiscoveryConfig discoveryConfig = join.getDiscoveryConfig();
+        discoveryConfig.isEnabled();
         DiscoveryStrategyConfig strategyConfig = new DiscoveryStrategyConfig("com.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy");
         strategyConfig.addProperty("service-name", "hazelcast-kubernetes");
-        strategyConfig.addProperty("service-label-name", "");
-        strategyConfig.addProperty("service-label-value", "");
-        strategyConfig.addProperty("namespace", "default");
-        strategyConfig.addProperty("service-dns", "hazelcast-kubernetes.default.svc.local");
-        strategyConfig.addProperty("service-dns-timeout", "10");
 
         discoveryConfig.addDiscoveryStrategyConfig(strategyConfig);
         return discoveryConfig;
+
     }
 
 
